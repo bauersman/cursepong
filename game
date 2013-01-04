@@ -9,6 +9,14 @@ require 'window'
 
 LOG = Logger.new('./debug.log')
 
+class Scoreboard < Window
+  def render
+    [
+      sprintf("  %-37d %37d", Game.score[:left], Game.score[:right])
+    ]
+  end
+end
+
 class Field < Window
   attr_accessor :lpaddle, :rpaddle, :ball
 
@@ -223,8 +231,8 @@ module Game
     @windows = []
 
     @windows << @field = Field.new(80,25)
-    @windows << Status.new(80,10, 27)
-    #@windows << Status.new(38,6, 27,42)
+    @windows << Scoreboard.new(80,1, 27)
+    @windows << Status.new(80,6, 30)
 
     @start_time = @last_fps_time = Time.now
     @frames = 0
