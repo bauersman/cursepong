@@ -13,7 +13,7 @@ module Movable
   end
 
   def step
-    @speedy = 0 if speedy > 0 && @y >= @maxy+1 || speedy < 0 && @y <= @miny-1
+    @speedy = 0 if speedy > 0 && @y >= @maxy+1 || speedy < 0 && @y <= @miny
     @x += speedx*0.01
     @y += speedy*0.01
   end

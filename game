@@ -4,6 +4,7 @@
 $LOAD_PATH.unshift File.join(%w(. lib))
 require 'curses'
 require 'logger'
+
 require 'movable'
 require 'window'
 
@@ -48,7 +49,7 @@ class Field < Window
   def reset
     @ball.x = 40
     @ball.y = 12
-    @ball.speedx = rand(2) == 0 ? -40 : 40
+    @ball.speedx = rand(2) == 0 ? -45 : 45
     @ball.speedy = 0
   end
 
@@ -114,11 +115,14 @@ class Paddle
   end
 
   def follow(ball)
-    dist = (ball.y+ball.speedy/10) - self.y
-    acc = 0.2 + dist.abs*0.2 + speedy.abs/15
-    if dist > 0 && speedy < 12
+    xdist = ball.x - self.x
+    ydist = ball.y - self.y
+
+    target = (ydist+(ball.speedy/20))+0.5
+    acc = 0.2 + target.abs*0.2 + speedy.abs/10
+    if target > 0 && speedy < 12
       self.speedy += acc
-    elsif dist < 0 && speedy > -12
+    elsif target < 0 && speedy > -12
       self.speedy -= acc
     end
     step
@@ -127,7 +131,8 @@ class Paddle
   def is_at?(xpos, ypos)
     x = @x.to_i
     y = @y.to_i
-    [y-1,y,y+1].include?(ypos) && x==xpos
+
+    (y-1==ypos || y==ypos || y+1==ypos) && x==xpos
   end
 
   def render_tile
@@ -152,13 +157,14 @@ class Ball
   end
 
   def bounce_from(paddle)
+    dir = speedx==0 ? 1 : speedx/speedx.abs
     case self.y.to_i
     when paddle.y.to_i-1
       LOG.debug 'top hit'
       self.speedy -= 5
     when paddle.y.to_i
       LOG.debug 'middle hit'
-      self.speedx += (speedx < 0 ? -5 : 5)
+      self.speedx += 5*dir if speedx.abs < 100
     when paddle.y.to_i+1
       LOG.debug 'bottom hit'
       self.speedy += 5
