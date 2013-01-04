@@ -25,16 +25,12 @@ module Movable
   def up
     return if @y < @miny
     @y -= 1
-    after_move
   end
 
   def down
     return if @y > @maxy
     @y += 1
-    after_move
   end
-
-  def after_move; end
 end
 
 

@@ -20,11 +20,11 @@ end
 class Field < Window
   attr_accessor :lpaddle, :rpaddle, :ball
 
-  def initialize(xsize=10, ysize=10)
+  def initialize(*args)
     super
     @default_tile = ' '
-    @lpaddle = Paddle.new(1, 3, 4, 6)
-    @rpaddle = Paddle.new(1, 3, 14, 73)
+    @lpaddle = Paddle.new(6,4)
+    @rpaddle = Paddle.new(73,14)
     @ball = Ball.new(40,12)
     reset
   end
@@ -43,12 +43,6 @@ class Field < Window
     elsif @ball.x < 1
       Game.goal :right
     end
-  end
-
-  def draw
-    super
-    @lpaddle.draw
-    @rpaddle.draw
   end
 
   def reset
@@ -77,10 +71,12 @@ class Field < Window
     bx = ball.x.to_i
     px = paddle.x.to_i
 
-    bx == px || bx == px-2
+    bx == px# || bx == px-1
   end
 
   def render_tile(xpos, ypos)
+    return lpaddle.render_tile if lpaddle && lpaddle.is_at?(xpos, ypos)
+    return rpaddle.render_tile if rpaddle && rpaddle.is_at?(xpos, ypos)
     return ball.render_tile if ball && ball.is_at?(xpos, ypos)
     super
   end
@@ -88,10 +84,6 @@ class Field < Window
 end
 
 class Status < Window
-  def initialize(*args)
-    super
-    @testarr = []
-  end
 
   def render
     [
@@ -100,7 +92,7 @@ class Status < Window
       " score: #{Game.score.inspect}      ",
       " rpaddle y-speed: #{ff Game.field.rpaddle.speedy}     ",
       " ball speed: (x:#{ff Game.field.ball.speedx}|y:#{Game.field.ball.speedy})     ",
-      " Object count: #{ObjectSpace.count_objects}
+      #" Object count: #{ObjectSpace.count_objects}  ",
       " #{Game.paused? ? "PAUSED" : '        '}",
     ]
   end
@@ -112,25 +104,13 @@ class Status < Window
   end
 end
 
-class Paddle < Window
+class Paddle
   include Movable
 
-  def initialize(*args)
-    super
-    init_movable(left+1, top+1)
-    self.border = false
+  def initialize(x, y)
+    init_movable(x, y)
     @maxy = 22
-    @miny = 3
-  end
-
-  def up
-    return if @y < 3
-    super
-  end
-
-  def down
-    return if @y > 22
-    super
+    @miny = 2
   end
 
   def follow(ball)
@@ -142,24 +122,17 @@ class Paddle < Window
       self.speedy -= acc
     end
     step
-    after_move
   end
 
-  def after_move
-    window.move(y, x)
+  def is_at?(xpos, ypos)
+    x = @x.to_i
+    y = @y.to_i
+    [y-1,y,y+1].include?(ypos) && x==xpos
   end
 
-  def render
-    [
-      ?▇,
-      ?▇,
-      ?▇,
-    ]
+  def render_tile
+    ?▇
   end
-end
-
-class Entity
-
 end
 
 class Ball
@@ -248,7 +221,7 @@ module Game
       process_game unless paused?
       process_keyboard
       Curses.refresh
-      GC.start
+      #GC.start
       @frames += 1
       @frame_took = Time.now - frame_start
       sleep max_frame - @frame_took if @frame_took < max_frame
